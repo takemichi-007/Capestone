@@ -13,6 +13,8 @@ public class SellerOrderDTO {
     private String size;
     private String phone;
     private String address;
+    private String paymentMode;
+    private String paymentStatus;
 
     public SellerOrderDTO() {
     }
@@ -41,6 +43,38 @@ public class SellerOrderDTO {
         this.size = size;
         this.phone = phone;
         this.address = address;
+        this.paymentMode = "OFFLINE";
+        this.paymentStatus = "PENDING";
+    }
+
+    public SellerOrderDTO(
+            int orderId,
+            int customerId,
+            int productId,
+            String productName,
+            int quantity,
+            double price,
+            String status,
+            String color,
+            String size,
+            String phone,
+            String address,
+            String paymentMode,
+            String paymentStatus) {
+
+        this.orderId = orderId;
+        this.customerId = customerId;
+        this.productId = productId;
+        this.productName = productName;
+        this.quantity = quantity;
+        this.price = price;
+        this.status = status;
+        this.color = color;
+        this.size = size;
+        this.phone = phone;
+        this.address = address;
+        this.paymentMode = paymentMode != null ? paymentMode : "OFFLINE";
+        this.paymentStatus = paymentStatus != null ? paymentStatus : "PENDING";
     }
 
     public int getOrderId() {
@@ -129,5 +163,21 @@ public class SellerOrderDTO {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getPaymentMode() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 }

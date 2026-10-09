@@ -12,6 +12,7 @@ import Register from "./Register";
 
 import CustomerDashboard from "./CustomerDashboard";
 import Cart from "./Cart";
+import Wishlist from "./Wishlist";
 import OrderHistory from "./OrderHistory";
 
 import SellerDashboard from "./SellerDashboard";
@@ -84,6 +85,13 @@ function App() {
                         path="/cart"
                         element={
                             <Cart />
+                        }
+                    />
+
+                    <Route
+                        path="/wishlist"
+                        element={
+                            <Wishlist />
                         }
                     />
 

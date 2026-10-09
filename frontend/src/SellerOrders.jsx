@@ -232,22 +232,42 @@ function SellerOrders() {
                             ₹{order.price} (Item Total: <b>₹{(order.quantity * order.price).toFixed(2)}</b>)
                         </p>
 
-                        {/* SHIPPING & CONTACT DETAILS */}
-                        {(order.phone || order.address) && (
-                            <div style={styles.shippingBox}>
-                                <h4 style={{ margin: "0 0 6px 0", color: "#334155" }}>🚚 Delivery & Contact Info</h4>
-                                {order.phone && (
-                                    <p style={{ margin: "2px 0", fontSize: "14px" }}>
-                                        <strong>📞 Customer Phone:</strong> {order.phone}
-                                    </p>
-                                )}
-                                {order.address && (
-                                    <p style={{ margin: "2px 0", fontSize: "14px" }}>
-                                        <strong>🏠 Shipping Address:</strong> {order.address}
-                                    </p>
-                                )}
+                        {/* SHIPPING & CONTACT & PAYMENT DETAILS */}
+                        <div style={styles.shippingBox}>
+                            <h4 style={{ margin: "0 0 8px 0", color: "#334155" }}>🚚 Delivery & Payment Info</h4>
+                            <div style={{ display: "flex", gap: "10px", marginBottom: "8px", flexWrap: "wrap" }}>
+                                <span style={{
+                                    backgroundColor: order.paymentMode === "ONLINE" ? "#e0f2fe" : "#fef3c7",
+                                    color: order.paymentMode === "ONLINE" ? "#0369a1" : "#b45309",
+                                    padding: "3px 10px",
+                                    borderRadius: "6px",
+                                    fontSize: "12px",
+                                    fontWeight: "bold"
+                                }}>
+                                    💳 Mode: {order.paymentMode === "ONLINE" ? "Online Prepaid" : "Offline (Cash on Delivery)"}
+                                </span>
+                                <span style={{
+                                    backgroundColor: order.paymentStatus && order.paymentStatus.toUpperCase().includes("PAID") ? "#dcfce7" : "#fef9c3",
+                                    color: order.paymentStatus && order.paymentStatus.toUpperCase().includes("PAID") ? "#15803d" : "#854d0e",
+                                    padding: "3px 10px",
+                                    borderRadius: "6px",
+                                    fontSize: "12px",
+                                    fontWeight: "bold"
+                                }}>
+                                    ✓ Status: {order.paymentStatus || "PENDING"}
+                                </span>
                             </div>
-                        )}
+                            {order.phone && (
+                                <p style={{ margin: "2px 0", fontSize: "14px" }}>
+                                    <strong>📞 Customer Phone:</strong> {order.phone}
+                                </p>
+                            )}
+                            {order.address && (
+                                <p style={{ margin: "2px 0", fontSize: "14px" }}>
+                                    <strong>🏠 Shipping Address:</strong> {order.address}
+                                </p>
+                            )}
+                        </div>
 
                     </div>
 

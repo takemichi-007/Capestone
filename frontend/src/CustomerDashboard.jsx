@@ -39,11 +39,14 @@ function CustomerDashboard() {
 
 
     // =========================
-    // CART COUNT
+    // CART & WISHLIST COUNT
     // =========================
 
     const [cartCount, setCartCount] =
         useState(0);
+
+    const [wishlistIds, setWishlistIds] =
+        useState(new Set());
 
 
     // =========================
@@ -169,7 +172,7 @@ function CustomerDashboard() {
 
 
     // =====================================================
-    // LOAD CART COUNT
+    // LOAD CART & WISHLIST COUNT
     // =====================================================
 
     useEffect(() => {
@@ -179,6 +182,7 @@ function CustomerDashboard() {
         }
 
         loadCartCount();
+        loadWishlist();
 
     }, [customerId]);
 
@@ -223,6 +227,51 @@ function CustomerDashboard() {
 
             });
 
+    };
+
+    const loadWishlist = () => {
+        if (!customerId) return;
+        fetch(`${API_BASE_URL}/api/wishlist/${customerId}`)
+            .then(res => res.ok ? res.json() : [])
+            .then(data => {
+                const idSet = new Set(data.map(item => item.productId));
+                setWishlistIds(idSet);
+            })
+            .catch(err => console.error("Wishlist fetch error:", err));
+    };
+
+    const toggleWishlist = (productId) => {
+        if (!customerId) {
+            alert("Please login as customer to save favourites.");
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/api/wishlist/toggle`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                customerId: customerId,
+                productId: productId
+            })
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to toggle wishlist");
+                return res.json();
+            })
+            .then(data => {
+                setWishlistIds(prev => {
+                    const next = new Set(prev);
+                    if (data.status === "ADDED") {
+                        next.add(productId);
+                    } else {
+                        next.delete(productId);
+                    }
+                    return next;
+                });
+            })
+            .catch(err => {
+                console.error("Error toggling wishlist:", err);
+            });
     };
 
 
@@ -909,6 +958,21 @@ function CustomerDashboard() {
 
                     <button
                         style={
+                            styles.wishlistButton
+                        }
+                        onClick={() =>
+                            navigate(
+                                "/wishlist"
+                            )
+                        }
+                    >
+                        ❤️ Wishlist
+                        {wishlistIds.size > 0 &&
+                            ` (${wishlistIds.size})`}
+                    </button>
+
+                    <button
+                        style={
                             styles.navButton
                         }
                         onClick={() =>
@@ -1047,28 +1111,44 @@ function CustomerDashboard() {
                                 }
                             >
 
-                                {/* IMAGE */}
+                                {/* IMAGE & WISHLIST BUTTON */}
+                                <div style={styles.imageContainer}>
+                                    {product.imageUrl ? (
+                                        <img
+                                            src={
+                                                product.imageUrl
+                                            }
+                                            alt={
+                                                product.name
+                                            }
+                                            style={
+                                                styles.productImage
+                                            }
+                                            onError={(e) => {
+                                                e.target.style.display =
+                                                    "none";
+                                            }}
+                                        />
+                                    ) : (
+                                        <div style={styles.imagePlaceholder}>🛍️</div>
+                                    )}
 
-                                {product.imageUrl && (
-
-                                    <img
-                                        src={
-                                            product.imageUrl
-                                        }
-                                        alt={
-                                            product.name
-                                        }
-                                        style={
-                                            styles.productImage
-                                        }
-                                        onError={(e) => {
-                                            e.target.style.display =
-                                                "none";
+                                    <button
+                                        type="button"
+                                        title={wishlistIds.has(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleWishlist(product.id);
                                         }}
-                                    />
-
-                                )}
-
+                                        style={{
+                                            ...styles.wishlistIconBtn,
+                                            color: wishlistIds.has(product.id) ? "#e11d48" : "#94a3b8",
+                                            backgroundColor: wishlistIds.has(product.id) ? "#ffe4e6" : "rgba(255, 255, 255, 0.9)"
+                                        }}
+                                    >
+                                        {wishlistIds.has(product.id) ? "❤️" : "🤍"}
+                                    </button>
+                                </div>
 
                                 <h3>
                                     {
@@ -1500,6 +1580,18 @@ const styles = {
     },
 
 
+    wishlistButton: {
+        backgroundColor: "#e11d48",
+        color: "white",
+        border: "none",
+        padding: "10px 15px",
+        borderRadius: "5px",
+        cursor: "pointer",
+        margin: "5px",
+        fontWeight: "bold"
+    },
+
+
     navButton: {
         backgroundColor: "#007bff",
         color: "white",
@@ -1580,12 +1672,48 @@ const styles = {
     },
 
 
-    productImage: {
+    imageContainer: {
+        position: "relative",
         width: "100%",
         height: "180px",
-        objectFit: "cover",
+        backgroundColor: "#f1f5f9",
         borderRadius: "8px",
-        marginBottom: "10px"
+        overflow: "hidden",
+        marginBottom: "10px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+    },
+
+
+    imagePlaceholder: {
+        fontSize: "40px"
+    },
+
+
+    wishlistIconBtn: {
+        position: "absolute",
+        top: "8px",
+        right: "8px",
+        border: "none",
+        width: "36px",
+        height: "36px",
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        fontSize: "18px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+        transition: "all 0.2s ease"
+    },
+
+
+    productImage: {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        borderRadius: "8px"
     },
 
 

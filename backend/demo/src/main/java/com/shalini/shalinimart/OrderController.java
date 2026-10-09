@@ -59,6 +59,9 @@ public class OrderController {
 
         String phone = checkoutRequest != null ? checkoutRequest.getPhone() : "";
         String address = checkoutRequest != null ? checkoutRequest.getAddress() : "";
+        String paymentMode = checkoutRequest != null && checkoutRequest.getPaymentMode() != null && !checkoutRequest.getPaymentMode().isBlank() 
+                ? checkoutRequest.getPaymentMode().toUpperCase() : "OFFLINE";
+        String paymentStatus = "ONLINE".equalsIgnoreCase(paymentMode) ? "PAID (CONFIRMED)" : "CASH ON DELIVERY (PENDING)";
 
         // Create order
         Order order =
@@ -67,7 +70,9 @@ public class OrderController {
                         totalAmount,
                         "CONFIRMED",
                         phone,
-                        address
+                        address,
+                        paymentMode,
+                        paymentStatus
                 );
 
         // Save order first
@@ -161,7 +166,9 @@ public class OrderController {
                         item.getColor(),
                         item.getSize(),
                         ord.getPhone(),
-                        ord.getAddress()
+                        ord.getAddress(),
+                        ord.getPaymentMode(),
+                        ord.getPaymentStatus()
                 ));
             }
         }
@@ -207,6 +214,9 @@ public class OrderController {
 
         // Change status
         order.setStatus("RECEIVED");
+        if ("OFFLINE".equalsIgnoreCase(order.getPaymentMode())) {
+            order.setPaymentStatus("PAID ON DELIVERY (CONFIRMED)");
+        }
 
         // Save updated order
         Order updatedOrder =
@@ -214,5 +224,19 @@ public class OrderController {
 
         // Return updated order as JSON
         return updatedOrder;
+    }
+
+    // =========================================================
+    // CONFIRM PAYMENT (FOR ADMIN OR OFFLINE COLLECTION)
+    // =========================================================
+    @PutMapping("/{orderId}/confirm-payment")
+    public Object confirmOrderPayment(@PathVariable int orderId) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isEmpty()) {
+            return "Order not found!";
+        }
+        Order order = optionalOrder.get();
+        order.setPaymentStatus("PAID (CONFIRMED)");
+        return orderRepository.save(order);
     }
 }

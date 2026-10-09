@@ -24,6 +24,10 @@ public class Order {
     @Column(length = 1000)
     private String address;
 
+    private String paymentMode; // "ONLINE" or "OFFLINE" (Cash on Delivery)
+
+    private String paymentStatus; // "PAID", "PENDING", etc.
+
     public Order() {
     }
 
@@ -32,6 +36,8 @@ public class Order {
         this.totalAmount = totalAmount;
         this.status = status;
         this.orderDate = LocalDateTime.now();
+        this.paymentMode = "OFFLINE";
+        this.paymentStatus = "PENDING";
     }
 
     public Order(int customerId, double totalAmount, String status, String phone, String address) {
@@ -41,6 +47,19 @@ public class Order {
         this.phone = phone;
         this.address = address;
         this.orderDate = LocalDateTime.now();
+        this.paymentMode = "OFFLINE";
+        this.paymentStatus = "PENDING";
+    }
+
+    public Order(int customerId, double totalAmount, String status, String phone, String address, String paymentMode, String paymentStatus) {
+        this.customerId = customerId;
+        this.totalAmount = totalAmount;
+        this.status = status;
+        this.phone = phone;
+        this.address = address;
+        this.orderDate = LocalDateTime.now();
+        this.paymentMode = paymentMode != null && !paymentMode.isBlank() ? paymentMode : "OFFLINE";
+        this.paymentStatus = paymentStatus != null && !paymentStatus.isBlank() ? paymentStatus : "CONFIRMED";
     }
 
     public int getId() {
@@ -93,5 +112,21 @@ public class Order {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getPaymentMode() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 }

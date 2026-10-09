@@ -296,6 +296,18 @@ function OrderHistory() {
                         🛍️ Shop More
                     </button>
                     <button
+                        style={styles.wishlistHeaderBtn}
+                        onClick={() => navigate("/wishlist")}
+                    >
+                        ❤️ My Wishlist
+                    </button>
+                    <button
+                        style={styles.cartHeaderBtn}
+                        onClick={() => navigate("/cart")}
+                    >
+                        🛒 Cart
+                    </button>
+                    <button
                         style={styles.logoutButton}
                         onClick={logout}
                     >
@@ -363,8 +375,21 @@ function OrderHistory() {
                                     <span style={styles.totalLabel}>💰 Total Order Amount</span>
                                     <h2 style={styles.totalAmount}>₹{Number(totalAmount).toFixed(2)}</h2>
                                 </div>
-                                <div style={styles.paymentStatus}>
-                                    ✓ Payment Confirmed
+                                <div style={styles.paymentInfoSection}>
+                                    <div style={{
+                                        ...styles.paymentModeTag,
+                                        backgroundColor: order.paymentMode === "ONLINE" ? "#e0f2fe" : "#fef3c7",
+                                        color: order.paymentMode === "ONLINE" ? "#0369a1" : "#b45309"
+                                    }}>
+                                        {order.paymentMode === "ONLINE" ? "⚡ Online Prepaid" : "💵 Cash on Delivery (Offline)"}
+                                    </div>
+                                    <div style={{
+                                        ...styles.paymentStatus,
+                                        backgroundColor: order.paymentStatus && order.paymentStatus.toUpperCase().includes("PAID") ? "#dcfce7" : "#fef9c3",
+                                        color: order.paymentStatus && order.paymentStatus.toUpperCase().includes("PAID") ? "#15803d" : "#854d0e"
+                                    }}>
+                                        {order.paymentStatus ? `✓ ${order.paymentStatus}` : "✓ Payment Confirmed"}
+                                    </div>
                                 </div>
                             </div>
 
@@ -676,6 +701,27 @@ const styles = {
         cursor: "pointer",
         fontSize: "14px"
     },
+    wishlistHeaderBtn: {
+        border: "none",
+        padding: "12px 20px",
+        borderRadius: "10px",
+        background: "#e11d48",
+        color: "white",
+        fontWeight: "bold",
+        cursor: "pointer",
+        fontSize: "14px",
+        boxShadow: "0 4px 12px rgba(225, 29, 72, 0.3)"
+    },
+    cartHeaderBtn: {
+        border: "none",
+        padding: "12px 20px",
+        borderRadius: "10px",
+        background: "#10b981",
+        color: "white",
+        fontWeight: "bold",
+        cursor: "pointer",
+        fontSize: "14px"
+    },
     logoutButton: {
         border: "none",
         padding: "12px 20px",
@@ -791,7 +837,21 @@ const styles = {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        gap: "15px"
+        gap: "15px",
+        flexWrap: "wrap"
+    },
+    paymentInfoSection: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        gap: "6px"
+    },
+    paymentModeTag: {
+        padding: "5px 12px",
+        borderRadius: "16px",
+        fontWeight: "700",
+        fontSize: "12px",
+        display: "inline-block"
     },
     totalLabel: {
         color: "#475569",

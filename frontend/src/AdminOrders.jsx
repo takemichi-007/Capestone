@@ -229,6 +229,38 @@ function AdminOrders() {
                                     <span style={styles.amountText}>₹{Number(order.totalAmount || 0).toFixed(2)}</span>
                                 </p>
 
+                                <p>
+                                    <strong>
+                                        Payment Mode:
+                                    </strong>{" "}
+                                    <span style={{
+                                        backgroundColor: order.paymentMode === "ONLINE" ? "#e0f2fe" : "#fef3c7",
+                                        color: order.paymentMode === "ONLINE" ? "#0369a1" : "#b45309",
+                                        padding: "3px 8px",
+                                        borderRadius: "6px",
+                                        fontWeight: "bold",
+                                        fontSize: "12px"
+                                    }}>
+                                        {order.paymentMode === "ONLINE" ? "⚡ Online Prepaid" : "💵 Cash on Delivery (Offline)"}
+                                    </span>
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Payment Status:
+                                    </strong>{" "}
+                                    <span style={{
+                                        backgroundColor: order.paymentStatus && order.paymentStatus.toUpperCase().includes("PAID") ? "#dcfce7" : "#fef9c3",
+                                        color: order.paymentStatus && order.paymentStatus.toUpperCase().includes("PAID") ? "#15803d" : "#854d0e",
+                                        padding: "3px 8px",
+                                        borderRadius: "6px",
+                                        fontWeight: "bold",
+                                        fontSize: "12px"
+                                    }}>
+                                        {order.paymentStatus || "PENDING"}
+                                    </span>
+                                </p>
+
                                 {/* CONTACT & ADDRESS */}
                                 {(order.phone || order.address) && (
                                     <div style={styles.customerInfoBox}>

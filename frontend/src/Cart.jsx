@@ -24,6 +24,12 @@ function Cart() {
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
     const [phone, setPhone] = useState("");
     const [address, setAddress] = useState("");
+    const [paymentMode, setPaymentMode] = useState("ONLINE"); // "ONLINE" or "OFFLINE"
+    const [onlinePaymentMethod, setOnlinePaymentMethod] = useState("UPI"); // "UPI", "CARD", "NETBANKING"
+    const [upiId, setUpiId] = useState("");
+    const [cardNumber, setCardNumber] = useState("");
+    const [cardExpiry, setCardExpiry] = useState("");
+    const [cardCvv, setCardCvv] = useState("");
     const [formError, setFormError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -268,18 +274,46 @@ function Cart() {
             return;
         }
 
+        if (paymentMode === "ONLINE") {
+            if (onlinePaymentMethod === "UPI") {
+                if (!upiId.trim() || !upiId.includes("@")) {
+                    setFormError("⚠️ Please enter a valid UPI ID (e.g., yourname@okhdfcbank).");
+                    return;
+                }
+            } else if (onlinePaymentMethod === "CARD") {
+                const cleanCard = cardNumber.replace(/\s+/g, "");
+                if (cleanCard.length < 16) {
+                    setFormError("⚠️ Please enter a valid 16-digit Card Number.");
+                    return;
+                }
+                if (!cardExpiry.trim()) {
+                    setFormError("⚠️ Please enter the Card Expiry date (MM/YY).");
+                    return;
+                }
+                if (!cardCvv.trim() || cardCvv.trim().length < 3) {
+                    setFormError("⚠️ Please enter a valid 3-digit CVV.");
+                    return;
+                }
+            }
+        }
+
         setIsSubmitting(true);
         setFormError("");
+
+        const payload = {
+            phone: cleanPhone,
+            address: cleanAddress,
+            paymentMode: paymentMode,
+            onlinePaymentMethod: paymentMode === "ONLINE" ? onlinePaymentMethod : null,
+            transactionRef: paymentMode === "ONLINE" ? `TXN_${Date.now().toString(36).toUpperCase()}` : null
+        };
 
         fetch(`${API_BASE_URL}/api/orders/checkout/${customerId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                phone: cleanPhone,
-                address: cleanAddress
-            })
+            body: JSON.stringify(payload)
         })
             .then(response => {
                 if (!response.ok) {
@@ -291,7 +325,15 @@ function Cart() {
                 setShowCheckoutModal(false);
                 setPhone("");
                 setAddress("");
-                alert("🎉 Order placed successfully! Track your order in My Orders.");
+                setUpiId("");
+                setCardNumber("");
+                setCardExpiry("");
+                setCardCvv("");
+                if (paymentMode === "ONLINE") {
+                    alert("🎉 Payment Successful! Your order has been placed and confirmed.");
+                } else {
+                    alert("🎉 Order placed successfully with Cash on Delivery (Offline)! Pay when your order arrives.");
+                }
                 navigate("/orders");
             })
             .catch(error => {
@@ -411,6 +453,14 @@ function Cart() {
                         🏠 Products
                     </button>
 
+                    <button
+                        style={styles.wishlistNavButton}
+                        onClick={() =>
+                            navigate("/wishlist")
+                        }
+                    >
+                        ❤️ Wishlist
+                    </button>
 
                     <button
                         style={styles.orderButton}
@@ -758,9 +808,190 @@ function Cart() {
                                 />
                             </div>
 
+                            {/* PAYMENT MODE SELECTION */}
+                            <div style={styles.formGroup}>
+                                <label style={styles.formLabel}>
+                                    💳 <b>Choose Payment Mode *</b>
+                                </label>
+
+                                <div style={styles.paymentModeSelector}>
+                                    <div
+                                        style={{
+                                            ...styles.paymentOptionCard,
+                                            ...(paymentMode === "ONLINE" ? styles.paymentOptionActive : {})
+                                        }}
+                                        onClick={() => setPaymentMode("ONLINE")}
+                                    >
+                                        <div style={styles.paymentOptionHeader}>
+                                            <input
+                                                type="radio"
+                                                name="paymentMode"
+                                                checked={paymentMode === "ONLINE"}
+                                                onChange={() => setPaymentMode("ONLINE")}
+                                                style={styles.radioInput}
+                                            />
+                                            <div>
+                                                <div style={styles.paymentOptionTitle}>⚡ Online Payment</div>
+                                                <div style={styles.paymentOptionSubtitle}>Instant confirmation via UPI, Cards, NetBanking</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            ...styles.paymentOptionCard,
+                                            ...(paymentMode === "OFFLINE" ? styles.paymentOptionActive : {})
+                                        }}
+                                        onClick={() => setPaymentMode("OFFLINE")}
+                                    >
+                                        <div style={styles.paymentOptionHeader}>
+                                            <input
+                                                type="radio"
+                                                name="paymentMode"
+                                                checked={paymentMode === "OFFLINE"}
+                                                onChange={() => setPaymentMode("OFFLINE")}
+                                                style={styles.radioInput}
+                                            />
+                                            <div>
+                                                <div style={styles.paymentOptionTitle}>💵 Offline / Cash on Delivery</div>
+                                                <div style={styles.paymentOptionSubtitle}>Pay in cash upon receiving package at doorstep</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ONLINE PAYMENT METHODS DETAILS */}
+                            {paymentMode === "ONLINE" && (
+                                <div style={styles.onlinePaymentBox}>
+                                    <div style={styles.onlineTabs}>
+                                        <button
+                                            type="button"
+                                            style={{
+                                                ...styles.onlineTabBtn,
+                                                ...(onlinePaymentMethod === "UPI" ? styles.onlineTabActive : {})
+                                            }}
+                                            onClick={() => setOnlinePaymentMethod("UPI")}
+                                        >
+                                            📱 UPI (GPay/PhonePe/Paytm)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            style={{
+                                                ...styles.onlineTabBtn,
+                                                ...(onlinePaymentMethod === "CARD" ? styles.onlineTabActive : {})
+                                            }}
+                                            onClick={() => setOnlinePaymentMethod("CARD")}
+                                        >
+                                            💳 Debit / Credit Card
+                                        </button>
+                                        <button
+                                            type="button"
+                                            style={{
+                                                ...styles.onlineTabBtn,
+                                                ...(onlinePaymentMethod === "NETBANKING" ? styles.onlineTabActive : {})
+                                            }}
+                                            onClick={() => setOnlinePaymentMethod("NETBANKING")}
+                                        >
+                                            🏦 Net Banking
+                                        </button>
+                                    </div>
+
+                                    {/* UPI OPTION */}
+                                    {onlinePaymentMethod === "UPI" && (
+                                        <div style={styles.paymentSubForm}>
+                                            <label style={styles.formLabel}>
+                                                Enter Virtual Payment Address (VPA / UPI ID)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. mobile@upi or username@okhdfcbank"
+                                                value={upiId}
+                                                onChange={(e) => setUpiId(e.target.value)}
+                                                style={styles.formInput}
+                                            />
+                                            <div style={styles.upiBadges}>
+                                                <span style={styles.upiPill}>Google Pay</span>
+                                                <span style={styles.upiPill}>PhonePe</span>
+                                                <span style={styles.upiPill}>Paytm</span>
+                                                <span style={styles.upiPill}>BHIM UPI</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* CARD OPTION */}
+                                    {onlinePaymentMethod === "CARD" && (
+                                        <div style={styles.paymentSubForm}>
+                                            <label style={styles.formLabel}>Card Number</label>
+                                            <input
+                                                type="text"
+                                                placeholder="4532 8900 1234 5678"
+                                                maxLength="19"
+                                                value={cardNumber}
+                                                onChange={(e) => setCardNumber(e.target.value)}
+                                                style={styles.formInput}
+                                            />
+                                            <div style={{ display: "flex", gap: "12px", marginTop: "10px" }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <label style={styles.formLabel}>Expiry (MM/YY)</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="MM/YY"
+                                                        maxLength="5"
+                                                        value={cardExpiry}
+                                                        onChange={(e) => setCardExpiry(e.target.value)}
+                                                        style={styles.formInput}
+                                                    />
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <label style={styles.formLabel}>CVV</label>
+                                                    <input
+                                                        type="password"
+                                                        placeholder="•••"
+                                                        maxLength="4"
+                                                        value={cardCvv}
+                                                        onChange={(e) => setCardCvv(e.target.value)}
+                                                        style={styles.formInput}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* NET BANKING OPTION */}
+                                    {onlinePaymentMethod === "NETBANKING" && (
+                                        <div style={styles.paymentSubForm}>
+                                            <label style={styles.formLabel}>Select Bank</label>
+                                            <select style={styles.formInput}>
+                                                <option>State Bank of India (SBI)</option>
+                                                <option>HDFC Bank</option>
+                                                <option>ICICI Bank</option>
+                                                <option>Axis Bank</option>
+                                                <option>Kotak Mahindra Bank</option>
+                                                <option>Punjab National Bank</option>
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* OFFLINE PAYMENT CALLOUT */}
+                            {paymentMode === "OFFLINE" && (
+                                <div style={styles.offlineAlertBox}>
+                                    <div style={{ fontSize: "24px" }}>🚚</div>
+                                    <div>
+                                        <b>Cash on Delivery Selected:</b>
+                                        <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#475569" }}>
+                                            Keep ₹{getTotal().toFixed(2)} cash ready. You can inspect the package upon arrival and pay the delivery agent.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* ORDER SUMMARY PREVIEW */}
                             <div style={styles.orderSummaryBox}>
                                 <div><b>Total Items:</b> {cart.reduce((t, i) => t + Number(i.quantity), 0)}</div>
+                                <div><b>Payment Mode:</b> <span style={{ fontWeight: "700", color: paymentMode === "ONLINE" ? "#0284c7" : "#059669" }}>{paymentMode === "ONLINE" ? "Online (Prepaid)" : "Offline (Cash On Delivery)"}</span></div>
                                 <div><b>Grand Total:</b> <span style={{ color: "#28a745", fontSize: "18px" }}>₹{getTotal().toFixed(2)}</span></div>
                             </div>
 
@@ -775,10 +1006,14 @@ function Cart() {
                                 </button>
                                 <button
                                     type="submit"
-                                    style={styles.confirmOrderBtn}
+                                    style={paymentMode === "ONLINE" ? styles.confirmOnlineBtn : styles.confirmOrderBtn}
                                     disabled={isSubmitting}
                                 >
-                                    {isSubmitting ? "Placing Order..." : "✅ Confirm & Place Order"}
+                                    {isSubmitting
+                                        ? "Processing Order..."
+                                        : paymentMode === "ONLINE"
+                                        ? `🔒 Pay ₹${getTotal().toFixed(2)} & Confirm Order`
+                                        : `📦 Confirm Cash on Delivery Order`}
                                 </button>
                             </div>
                         </form>
@@ -1103,6 +1338,140 @@ const styles = {
         cursor: "pointer",
         fontWeight: "bold",
         fontSize: "14px"
+    },
+
+    confirmOnlineBtn: {
+        backgroundColor: "#0284c7",
+        color: "white",
+        border: "none",
+        padding: "10px 22px",
+        borderRadius: "6px",
+        cursor: "pointer",
+        fontWeight: "bold",
+        fontSize: "14px",
+        boxShadow: "0 4px 12px rgba(2, 132, 199, 0.3)"
+    },
+
+    wishlistNavButton: {
+        backgroundColor: "#e11d48",
+        color: "white",
+        border: "none",
+        padding: "10px 15px",
+        borderRadius: "5px",
+        cursor: "pointer",
+        margin: "5px",
+        fontWeight: "600"
+    },
+
+    paymentModeSelector: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+        marginTop: "4px"
+    },
+
+    paymentOptionCard: {
+        border: "2px solid #e2e8f0",
+        borderRadius: "10px",
+        padding: "12px 14px",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        backgroundColor: "#f8fafc"
+    },
+
+    paymentOptionActive: {
+        borderColor: "#0284c7",
+        backgroundColor: "#f0f9ff"
+    },
+
+    paymentOptionHeader: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px"
+    },
+
+    radioInput: {
+        width: "18px",
+        height: "18px",
+        cursor: "pointer",
+        accentColor: "#0284c7"
+    },
+
+    paymentOptionTitle: {
+        fontSize: "15px",
+        fontWeight: "700",
+        color: "#0f172a"
+    },
+
+    paymentOptionSubtitle: {
+        fontSize: "12px",
+        color: "#64748b",
+        marginTop: "2px"
+    },
+
+    onlinePaymentBox: {
+        backgroundColor: "#f8fafc",
+        border: "1px solid #e2e8f0",
+        borderRadius: "10px",
+        padding: "14px",
+        marginTop: "4px"
+    },
+
+    onlineTabs: {
+        display: "flex",
+        gap: "6px",
+        marginBottom: "14px",
+        flexWrap: "wrap"
+    },
+
+    onlineTabBtn: {
+        padding: "6px 12px",
+        fontSize: "12px",
+        fontWeight: "600",
+        border: "1px solid #cbd5e1",
+        borderRadius: "6px",
+        backgroundColor: "#ffffff",
+        color: "#475569",
+        cursor: "pointer"
+    },
+
+    onlineTabActive: {
+        backgroundColor: "#0284c7",
+        color: "#ffffff",
+        borderColor: "#0284c7"
+    },
+
+    paymentSubForm: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px"
+    },
+
+    upiBadges: {
+        display: "flex",
+        gap: "6px",
+        marginTop: "6px",
+        flexWrap: "wrap"
+    },
+
+    upiPill: {
+        fontSize: "11px",
+        backgroundColor: "#e2e8f0",
+        color: "#334155",
+        padding: "2px 8px",
+        borderRadius: "4px",
+        fontWeight: "600"
+    },
+
+    offlineAlertBox: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        backgroundColor: "#f0fdf4",
+        border: "1px solid #bbf7d0",
+        borderRadius: "10px",
+        padding: "12px 16px",
+        color: "#166534"
     }
 
 };
